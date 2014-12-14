@@ -18,7 +18,7 @@ class Testimonial extends DataObject {
         'Content',
         'Approved'
     );
-    private static $default_sort = "Created ASC";
+    private static $default_sort = "Created DESC";
 
     function forTemplate() {
         return $this->renderWith('Testimonial');
