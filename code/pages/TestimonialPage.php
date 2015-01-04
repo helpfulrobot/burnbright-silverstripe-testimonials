@@ -31,7 +31,7 @@ class TestimonialPage_Controller extends Page_Controller {
     }
 
     public function Testimonials() {
-        return Testimonial::get("Testimonial", array("Approved" => 1), "RAND()");
+        return Testimonial::get("Testimonial", array("Approved" => 1))->sort("SortOrder");
     }
 
 }

@@ -3,9 +3,10 @@
 class Testimonial extends DataObject {
 
     private static $db                = array(
-        'Author'   => 'Text',
-        'Approved' => 'Boolean',
-        'Content'  => 'Text'
+        'Author'    => 'Text',
+        'Approved'  => 'Boolean',
+        'Content'   => 'Text',
+        'SortOrder' => 'Int'
     );
     private static $searchable_fields = array(
         'Approved',
@@ -18,7 +19,7 @@ class Testimonial extends DataObject {
         'Content',
         'Approved'
     );
-    private static $default_sort = "Created DESC";
+    private static $default_sort      = "Created DESC";
 
     function forTemplate() {
         return $this->renderWith('Testimonial');
