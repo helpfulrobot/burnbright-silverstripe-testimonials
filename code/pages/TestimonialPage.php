@@ -20,27 +20,29 @@ class TestimonialPage_Controller extends Page_Controller {
             TextareaField::create('Content', 'Your testimonial')
         ));
 
-        $actions = new FieldList(
-                FormAction::create("submitTestimonial")->setTitle("Send")
-        );
-
-        $required = new RequiredFields('Name');
-
-        $form = new Form($this, 'TestimonialForm', $fields, $actions, $required);
-        if (class_exists("NocaptchaField")) {
-            $spamField = $form
-                    ->enableSpamProtection()
-                    ->fields()
-                    ->fieldByName('Captcha');
-            if ($spamField) {
-                $spamField->setTitle("Spam protection");
-            }
-        }
+        $actions = new FieldList(FormAction::create("submitTestimonial")
+                        ->setUseButtonTag(true)
+                        ->setTitle("Send")
+                        ->setAttribute("data-style", "expand-left")
+                        ->addExtraClass("ladda-button"));
+        $form    = new Form($this, 'TestimonialForm', $fields, $actions);
+        $this->extend("updateForm", $form);
         return $form;
     }
 
     public function submitTestimonial($data, Form $form) {
-        $form->sessionMessage('Hello ' . $data['Author'], 'success');
+        $filters     = array
+            (
+            "Author"  => FILTER_SANITIZE_STRING,
+            "Content" => FILTER_SANITIZE_STRING
+        );
+        $dataFilterd = filter_var_array($data, $filters);
+        if (!$dataFilterd["Author"]) {
+            $form->addErrorMessage('Author', 'Please enter a valid name', 'bad');
+        }
+        if (!$dataFilterd["Content"]) {
+            $form->addErrorMessage('Content', 'Please enter your testimonial', 'bad');
+        }
         return $this->redirectBack();
     }
 
