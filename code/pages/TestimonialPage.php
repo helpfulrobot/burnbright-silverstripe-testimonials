@@ -2,8 +2,38 @@
 
 class TestimonialPage extends Page {
 
+    private static $db               = array(
+        'NotificationEmails' => 'Text',
+        'ThankYouMessage'    => 'HTMLText'
+    );
+    protected $NotificationEmailList = array();
+
+    public function getCMSFields() {
+        $fields = parent::getCMSFields();
+        $fields->addFieldToTab("Root.Main", HtmlEditorField::create("ThankYouMessage", "Thank you message"));
+        $fields->addFieldToTab("Root.Notfications", TextareaField::create("NotificationEmails", "Notification emails")
+                        ->setDescription("Enter email accounts which will be notified when a new Testimonial is submitted. (One per line)"));
+        return $fields;
+    }
+
     public function Testimonials() {
         return Testimonial::get("Testimonial", array("Approved" => 1))->sort("SortOrder");
+    }
+
+    public function AllNotificationEmails() {
+
+        return Testimonial::get("Testimonial", array("Approved" => 1))->sort("SortOrder");
+    }
+
+    public function GetNotificationEmailList() {
+        if (!$this->NotificationEmailList) {
+            $this->NotificationEmailList = new ArrayList();
+            $addresses                   = preg_split("/\r\n|\n|\r/", $this->NotificationEmails);
+            foreach ($addresses as $address) {
+                $this->NotificationEmailList->add($address);
+            }
+        }
+        return $this->NotificationEmailList;
     }
 
 }
@@ -11,8 +41,14 @@ class TestimonialPage extends Page {
 class TestimonialPage_Controller extends Page_Controller {
 
     private static $allowed_actions = array(
-        'TestimonialForm'
+        'TestimonialForm', 'TestimonialSubmittedEmailPreview'
     );
+
+    public function index() {
+        Debug::message(TestimonialAdmin::create()->Link("/Testimonial/EditForm/field/Testimonial/item/2/edit"));
+
+        return array();
+    }
 
     public function TestimonialForm() {
         $fields = new FieldList(array(
@@ -30,7 +66,8 @@ class TestimonialPage_Controller extends Page_Controller {
         return $form;
     }
 
-    public function submitTestimonial($data, Form $form) {
+    public function validateSubmission($data, $form) {
+        $isValid     = true;
         $filters     = array
             (
             "Author"  => FILTER_SANITIZE_STRING,
@@ -38,12 +75,73 @@ class TestimonialPage_Controller extends Page_Controller {
         );
         $dataFilterd = filter_var_array($data, $filters);
         if (!$dataFilterd["Author"]) {
+            $isValid = false;
             $form->addErrorMessage('Author', 'Please enter a valid name', 'bad');
         }
         if (!$dataFilterd["Content"]) {
+            $isValid = false;
             $form->addErrorMessage('Content', 'Please enter your testimonial', 'bad');
         }
-        return $this->redirectBack();
+        return $isValid ? $dataFilterd : false;
+    }
+
+    public function submitTestimonial($data, Form $form) {
+        $dataFilterd = $this->validateSubmission($data, $form);
+        $result      = array();
+        if ($dataFilterd) {
+            $this->extend("onBeforeSubmitTestimonial", $dataFilterd, $form);
+            $testimonial  = Testimonial::create($dataFilterd);
+            $testimonial->write();
+            $extendResult = $this->extend("onAfterSubmitTestimonial", $this, $testimonial);
+            if (is_array($extendResult) && count($extendResult)) {
+                foreach ($extendResult as $value) {
+                    if (!is_null($value)) {
+                        if (!is_string($result)) {
+                            $result = "";
+                        }
+                        $result = $value;
+                    }
+                }
+            } else {
+                $result["ShowForm"] = false;
+                $result["Content"]  = "Your testimonial has been added";
+            }
+            $this->SendNotificationMail($testimonial);
+        } else {
+            $result = $this->redirectBack();
+        }
+
+        return $result;
+    }
+
+    /**
+     *
+     * @param Testimonial $testimonial
+     */
+    public function SendNotificationMail($testimonial) {
+        $email = Email::create()
+                ->setSubject("New testimonial has been submitted")
+                ->setTemplate('TestimonialSubmitted')
+                ->populateTemplate(ArrayData::create(array(
+                    "Author"      => $testimonial->Author,
+                    "Testimonial" => $testimonial->Content,
+                    'Link'        => TestimonialAdmin::create()->Link("/Testimonial/EditForm/field/Testimonial/item/" . $testimonial->ID . "/edit")
+        )));
+
+        foreach ($this->GetNotificationEmailList() as $emailAddress) {
+            $email->setTo($emailAddress);
+            $email->send();
+        }
+    }
+
+    public function TestimonialSubmittedEmailPreview() {
+        return $this->customise(
+                        array(
+                            "Author"      => "John Doe",
+                            "Textimonial" => "This is a testimonial",
+                            "Link"        => Director::absoluteURL("admin/Testimonials/Testimonial/EditForm/field/Testimonial/item/2/edit"),
+                        )
+                )->renderWith("TestimonialSubmitted");
     }
 
 }
