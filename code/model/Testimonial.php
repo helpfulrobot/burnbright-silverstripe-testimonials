@@ -1,6 +1,7 @@
 <?php
 
-class Testimonial extends DataObject {
+class Testimonial extends DataObject
+{
 
     private static $db = array(
         'Author'    => 'Text',
@@ -21,21 +22,23 @@ class Testimonial extends DataObject {
     );
     private static $default_sort = "Created DESC";
 
-    public function getCMSFields() {
+    public function getCMSFields()
+    {
         $fields = parent::getCMSFields();
         $fields->removeByName("SortOrder");
         return $fields;
     }
 
-    function forTemplate() {
+    public function forTemplate()
+    {
         return $this->renderWith('Testimonial');
     }
 
-    protected function onBeforeWrite() {
+    protected function onBeforeWrite()
+    {
         if (!$this->SortOrder) {
             $this->SortOrder = $this::get()->max("SortOrder") + 1;
         }
         return parent::onBeforeWrite();
     }
-
 }

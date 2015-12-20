@@ -1,6 +1,7 @@
 <?php
 
-class TestimonialPage extends Page {
+class TestimonialPage extends Page
+{
 
     private static $db               = array(
         'NotificationEmails' => 'Text',
@@ -8,7 +9,8 @@ class TestimonialPage extends Page {
     );
     protected $NotificationEmailList = array();
 
-    public function getCMSFields() {
+    public function getCMSFields()
+    {
         $fields = parent::getCMSFields();
         $fields->addFieldToTab("Root.Main", HtmlEditorField::create("ThankYouMessage", "Thank you message"));
         $fields->addFieldToTab("Root.Notfications", TextareaField::create("NotificationEmails", "Notification emails")
@@ -16,16 +18,18 @@ class TestimonialPage extends Page {
         return $fields;
     }
 
-    public function Testimonials() {
+    public function Testimonials()
+    {
         return Testimonial::get("Testimonial", array("Approved" => 1))->sort("SortOrder");
     }
 
-    public function AllNotificationEmails() {
-
+    public function AllNotificationEmails()
+    {
         return Testimonial::get("Testimonial", array("Approved" => 1))->sort("SortOrder");
     }
 
-    public function GetNotificationEmailList() {
+    public function GetNotificationEmailList()
+    {
         if (!$this->NotificationEmailList) {
             $this->NotificationEmailList = new ArrayList();
             $addresses                   = preg_split("/\r\n|\n|\r/", $this->NotificationEmails);
@@ -35,22 +39,24 @@ class TestimonialPage extends Page {
         }
         return $this->NotificationEmailList;
     }
-
 }
 
-class TestimonialPage_Controller extends Page_Controller {
+class TestimonialPage_Controller extends Page_Controller
+{
 
     private static $allowed_actions = array(
         'TestimonialForm', 'TestimonialSubmittedEmailPreview'
     );
 
-    public function index() {
+    public function index()
+    {
         Debug::message(TestimonialAdmin::create()->Link("/Testimonial/EditForm/field/Testimonial/item/2/edit"));
 
         return array();
     }
 
-    public function TestimonialForm() {
+    public function TestimonialForm()
+    {
         $fields = new FieldList(array(
             TextField::create('Author', 'Your Name'),
             TextareaField::create('Content', 'Your testimonial')
@@ -66,10 +72,10 @@ class TestimonialPage_Controller extends Page_Controller {
         return $form;
     }
 
-    public function validateSubmission($data, $form) {
+    public function validateSubmission($data, $form)
+    {
         $isValid     = true;
-        $filters     = array
-            (
+        $filters     = array(
             "Author"  => FILTER_SANITIZE_STRING,
             "Content" => FILTER_SANITIZE_STRING
         );
@@ -85,7 +91,8 @@ class TestimonialPage_Controller extends Page_Controller {
         return $isValid ? $dataFilterd : false;
     }
 
-    public function submitTestimonial($data, Form $form) {
+    public function submitTestimonial($data, Form $form)
+    {
         $dataFilterd = $this->validateSubmission($data, $form);
         $result      = array();
         if ($dataFilterd) {
@@ -118,7 +125,8 @@ class TestimonialPage_Controller extends Page_Controller {
      *
      * @param Testimonial $testimonial
      */
-    public function SendNotificationMail($testimonial) {
+    public function SendNotificationMail($testimonial)
+    {
         $email = Email::create()
                 ->setSubject("New testimonial has been submitted")
                 ->setTemplate('TestimonialSubmitted')
@@ -134,7 +142,8 @@ class TestimonialPage_Controller extends Page_Controller {
         }
     }
 
-    public function TestimonialSubmittedEmailPreview() {
+    public function TestimonialSubmittedEmailPreview()
+    {
         return $this->customise(
                         array(
                             "Author"      => "John Doe",
@@ -143,5 +152,4 @@ class TestimonialPage_Controller extends Page_Controller {
                         )
                 )->renderWith("TestimonialSubmitted");
     }
-
 }
