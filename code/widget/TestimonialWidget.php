@@ -1,6 +1,7 @@
 <?php
 
-class TestimonialWidget extends Widget {
+class TestimonialWidget extends Widget
+{
 
     private static $db      = array(
         "BtnText" => "VarChar(120)"
@@ -9,11 +10,13 @@ class TestimonialWidget extends Widget {
         "MoreLink" => "Page"
     );
 
-    public function Title() {
+    public function Title()
+    {
         return $this->WidgetLabel;
     }
 
-    public function Testimonials() {
+    public function Testimonials()
+    {
         Requirements::javascript(FRAMEWORK_DIR . '/thirdparty/jquery/jquery.js');
         Requirements::javascript("silverstripe-testimonials/javascript/jquery.anyslider.min.js");
         Requirements::javascript("silverstripe-testimonials/javascript/main.js");
@@ -21,7 +24,8 @@ class TestimonialWidget extends Widget {
         return Testimonial::get("Testimonial", array("Approved" => 1), "RAND()");
     }
 
-    public function getCMSFields() {
+    public function getCMSFields()
+    {
         $fields = parent::getCMSFields();
 
         $fields->addFieldToTab("Root.Main", new TextField('WidgetLabel', 'Widget Label'), "Enabled");
@@ -33,5 +37,4 @@ class TestimonialWidget extends Widget {
 
         return $fields;
     }
-
 }
