@@ -48,13 +48,6 @@ class TestimonialPage_Controller extends Page_Controller
         'TestimonialForm', 'TestimonialSubmittedEmailPreview'
     );
 
-    public function index()
-    {
-        Debug::message(TestimonialAdmin::create()->Link("/Testimonial/EditForm/field/Testimonial/item/2/edit"));
-
-        return array();
-    }
-
     public function TestimonialForm()
     {
         $fields = new FieldList(array(
